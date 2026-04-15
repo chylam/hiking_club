@@ -201,7 +201,18 @@
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        const firebaseConfig = JSON.parse(__firebase_config);
+          // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCIhe9jsgRjz5FE8ZxvJgnxyVjDonqBDbU",
+            authDomain: "hiking-club-f4d81.firebaseapp.com",
+            projectId: "hiking-club-f4d81",
+            storageBucket: "hiking-club-f4d81.firebasestorage.app",
+            messagingSenderId: "509289134199",
+            appId: "1:509289134199:web:e28bdc440ad9cd7e6eae72"
+        };
+
+
+        
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
