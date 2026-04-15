@@ -4,124 +4,42 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hiking Schedule Manager</title>
-    <!-- Load Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Use Inter font -->
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f7fafc;
-        }
-        /* Custom calendar grid styles */
-        .calendar-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 1px;
-            border: 1px solid #e2e8f0;
-            border-radius: 0.5rem;
-            overflow: hidden;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-        }
-        .day-header, .calendar-day {
-            text-align: center;
-            padding: 8px 4px;
-            min-height: 100px;
-            background-color: white;
-            position: relative;
-        }
-        .day-header {
-            background-color: #e2e8f0;
-            color: #4a5568;
-            font-weight: 600;
-            padding: 12px 4px;
-        }
-        .calendar-day {
-            border-bottom: 1px solid #e2e8f0;
-            border-right: 1px solid #e2e8f0;
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            padding-top: 25px;
-            overflow: auto;
-        }
-        .calendar-day:nth-child(7n) {
-            border-right: none;
-        }
-        .calendar-day-number {
-            position: absolute;
-            top: 4px;
-            left: 8px;
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: #4a5568;
-        }
-        .hike-item-calendar {
-            width: 100%;
-            text-align: left;
-            margin-bottom: 4px;
-            padding: 4px;
-            border-radius: 4px;
-            font-size: 0.75rem;
-            font-weight: 500;
-            overflow: hidden;
-            white-space: nowrap;
-            text-overflow: ellipsis;
-            cursor: pointer;
-            background-color: #a7f3d0;
-            color: #065f46;
-            transition: background-color 0.2s;
-        }
-        .hike-item-calendar:hover {
-            background-color: #6ee7b7;
-        }
-        #hike-description-editor:empty:before {
-            content: attr(placeholder);
-            color: #9ca3af;
-            pointer-events: none;
-        }
-        .editor-btn {
-            padding: 4px 8px;
-            border-radius: 4px;
-            background-color: #fff;
-            color: #10b981;
-            font-weight: 600;
-        }
-        .fixed-unit {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background-color: #e5e7eb;
-            color: #4b5563;
-            font-weight: 600;
-            padding: 0 12px;
-            border: 1px solid #d1d5db;
-            border-left: none;
-            border-radius: 0 0.5rem 0.5rem 0;
-        }
+        body { font-family: 'Inter', sans-serif; background-color: #f7fafc; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; border: 1px solid #e2e8f0; border-radius: 0.5rem; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+        .day-header, .calendar-day { text-align: center; padding: 8px 4px; min-height: 100px; background-color: white; position: relative; }
+        .day-header { background-color: #e2e8f0; color: #4a5568; font-weight: 600; padding: 12px 4px; }
+        .calendar-day { border-bottom: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; display: flex; flex-direction: column; align-items: flex-start; padding-top: 25px; overflow: auto; }
+        .calendar-day:nth-child(7n) { border-right: none; }
+        .calendar-day-number { position: absolute; top: 4px; left: 8px; font-size: 1.1rem; font-weight: 700; color: #4a5568; }
+        .hike-item-calendar { width: 100%; text-align: left; margin-bottom: 4px; padding: 4px; border-radius: 4px; font-size: 0.75rem; font-weight: 500; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; cursor: pointer; background-color: #a7f3d0; color: #065f46; transition: background-color 0.2s; }
+        .hike-item-calendar:hover { background-color: #6ee7b7; }
+        #hike-description-editor:empty:before { content: attr(placeholder); color: #9ca3af; pointer-events: none; }
+        .editor-btn { padding: 4px 8px; border-radius: 4px; background-color: #fff; color: #10b981; font-weight: 600; }
+        .fixed-unit { display: flex; align-items: center; justify-content: center; background-color: #e5e7eb; color: #4b5563; font-weight: 600; padding: 0 12px; border: 1px solid #d1d5db; border-left: none; border-radius: 0 0.5rem 0.5rem 0; }
+        .participant-tag { background: #d1fae5; color: #065f46; padding: 2px 8px; border-radius: 999px; font-size: 0.8rem; display: inline-block; margin: 2px; border: 1px solid #6ee7b7; }
     </style>
 </head>
 <body class="min-h-screen p-4 md:p-8">
 
     <div class="max-w-6xl mx-auto bg-white shadow-xl rounded-xl p-6 border-t-8 border-green-600">
-        <header class="mb-8">
-            <h1 class="text-4xl font-extrabold text-gray-900 flex items-center">
-                <span class="mr-3">🥾</span> Trail Tracker
-            </h1>
-            <div id="auth-status-container" class="mt-2 p-2 bg-gray-50 rounded border border-gray-100">
-                <p id="auth-status" class="text-sm text-gray-500">Initializing connection...</p>
+        <header class="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+                <h1 class="text-4xl font-extrabold text-gray-900 flex items-center">
+                    <span class="mr-3">🥾</span> Trail Tracker
+                </h1>
+                <p class="text-sm text-gray-500 mt-2">Plan and share your next adventure.</p>
             </div>
         </header>
 
-        <!-- Hike Submission Form -->
-        <section class="mb-8 p-6 bg-green-50 rounded-lg">
+        <section id="create-hike-section" class="mb-8 p-6 bg-green-50 rounded-lg">
             <h2 id="form-title" class="text-2xl font-semibold text-green-700 mb-4">Plan a New Hike</h2>
             <form id="add-hike-form" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <input type="hidden" id="hike-id-to-edit">
-                
                 <input type="text" id="hike-name" required placeholder="Hike Name" class="p-3 border border-green-300 rounded-lg">
                 <input type="text" id="hike-location" required placeholder="Location" class="p-3 border border-green-300 rounded-lg">
-                
                 <div class="flex items-center space-x-2">
                     <label class="text-gray-600 font-medium">Club:</label>
                     <select id="hike-club" class="p-3 border border-green-300 rounded-lg w-full bg-white">
@@ -131,77 +49,68 @@
                         <option value="PENINSULA">Peninsula</option>
                     </select>
                 </div>
-
                 <input type="date" id="hike-date" required class="p-3 border border-green-300 rounded-lg">
-                
                 <div class="flex">
                     <input type="number" id="hike-distance" required placeholder="Distance" class="p-3 border border-green-300 rounded-l-lg w-full">
                     <div class="fixed-unit">km</div>
                 </div>
-                
                 <div class="md:col-span-2">
                     <div class="bg-gray-100 p-2 rounded-t-lg flex space-x-2 border border-green-300 border-b-0">
                         <button type="button" class="editor-btn" onclick="formatDoc('bold')">B</button>
                         <button type="button" class="editor-btn" onclick="formatDoc('italic')">I</button>
                         <button type="button" class="editor-btn text-blue-600" onclick="insertLink()">Link</button>
                     </div>
-                    <div id="hike-description-editor" contenteditable="true" 
-                         class="p-3 border border-green-300 rounded-b-lg min-h-[100px] bg-white focus:outline-none" 
-                         placeholder="Hike details, difficulty, or meeting instructions..."></div>
+                    <div id="hike-description-editor" contenteditable="true" class="p-3 border border-green-300 rounded-b-lg min-h-[100px] bg-white focus:outline-none" placeholder="Hike details..."></div>
                 </div>
-                
                 <div class="md:col-span-2 flex space-x-2">
-                    <button type="submit" id="submit-btn" class="flex-grow bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg transition shadow-md">
-                        Schedule Hike
-                    </button>
-                    <button type="button" id="cancel-edit-btn" class="hidden px-6 bg-gray-400 text-white font-bold rounded-lg" onclick="resetForm()">
-                        Cancel
-                    </button>
+                    <button type="submit" id="submit-btn" class="flex-grow bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg transition shadow-md">Schedule Hike</button>
+                    <button type="button" id="cancel-edit-btn" class="hidden px-6 bg-gray-400 text-white font-bold rounded-lg" onclick="resetForm()">Cancel</button>
                 </div>
             </form>
         </section>
 
-        <!-- Calendar Section -->
         <section>
             <div class="flex justify-between items-center mb-6 bg-gray-100 p-4 rounded-lg">
                 <button onclick="changeMonth(-1)" class="text-green-600 font-bold hover:scale-110 transition">◀ Prev</button>
                 <h3 id="month-display" class="text-xl font-bold text-gray-800"></h3>
                 <button onclick="changeMonth(1)" class="text-green-600 font-bold hover:scale-110 transition">Next ▶</button>
             </div>
-
             <div class="calendar-grid" id="calendar-grid">
-                <div class="day-header">Sun</div>
-                <div class="day-header">Mon</div>
-                <div class="day-header">Tue</div>
-                <div class="day-header">Wed</div>
-                <div class="day-header">Thu</div>
-                <div class="day-header">Fri</div>
-                <div class="day-header">Sat</div>
+                <div class="day-header">Sun</div><div class="day-header">Mon</div><div class="day-header">Tue</div><div class="day-header">Wed</div><div class="day-header">Thu</div><div class="day-header">Fri</div><div class="day-header">Sat</div>
             </div>
-            
-            <div id="loading" class="text-center py-10 text-gray-500">Waiting for authentication...</div>
+            <div id="loading" class="text-center py-10 text-gray-500">Loading trail data...</div>
         </section>
     </div>
 
-    <!-- Modal -->
     <div id="modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl">
-            <h2 id="modal-title" class="text-2xl font-bold mb-4 text-green-800"></h2>
-            <div id="modal-content" class="text-gray-700 space-y-2 mb-6"></div>
-            <div class="flex justify-end space-x-2 border-t pt-4">
+        <div class="bg-white rounded-xl max-w-lg w-full p-6 shadow-2xl">
+            <h2 id="modal-title" class="text-2xl font-bold mb-2 text-green-800"></h2>
+            <div id="modal-content" class="text-gray-700 space-y-2 mb-4"></div>
+            
+            <div class="mt-4 border-t pt-4">
+                <h4 class="font-bold text-gray-800 mb-2">Participants:</h4>
+                <div id="participant-list" class="flex flex-wrap gap-1 mb-4"></div>
+                
+                <div id="join-controls" class="flex gap-2">
+                    <input type="text" id="join-name" placeholder="Enter your name to join" class="flex-grow p-2 border border-gray-300 rounded-lg text-sm">
+                    <button id="join-btn" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-bold">Join Hike</button>
+                </div>
+            </div>
+
+            <div class="flex justify-end space-x-2 border-t mt-6 pt-4">
                 <button onclick="closeModal()" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">Close</button>
-                <button id="edit-btn" class="hidden px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Edit</button>
-                <button id="delete-btn" class="hidden px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">Delete</button>
+                <button id="edit-btn" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Edit</button>
+                <button id="delete-btn" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">Delete</button>
             </div>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot, query, arrayUnion } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-          // Your web app's Firebase configuration
+        // Your web app's Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyCIhe9jsgRjz5FE8ZxvJgnxyVjDonqBDbU",
             authDomain: "hiking-club-f4d81.firebaseapp.com",
@@ -211,169 +120,129 @@
             appId: "1:509289134199:web:e28bdc440ad9cd7e6eae72"
         };
 
-
-        
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
         const appId = 'hiking-club';
 
-        let currentUser = null;
         let currentHikes = [];
         let viewDate = new Date();
-        let unsubscribeHikes = null;
+        let unsubscribe = null;
+        let isAuthReady = false;
 
-        // UI Refs
-        const calendarGrid = document.getElementById('calendar-grid');
-        const monthDisplay = document.getElementById('month-display');
-        const hikeForm = document.getElementById('add-hike-form');
-        const editor = document.getElementById('hike-description-editor');
-        const authStatus = document.getElementById('auth-status');
-        const loadingStatus = document.getElementById('loading');
-
-        // Editor functions
         window.formatDoc = (cmd) => document.execCommand(cmd, false, null);
-        window.insertLink = () => {
-            const url = prompt("Enter URL:");
-            if (url) document.execCommand('createLink', false, url);
-        };
+        window.insertLink = () => { const url = prompt("URL:"); if(url) document.execCommand('createLink', false, url); };
 
-        // Step 1: Initialize Auth correctly (RULE 3)
-        const initAuth = async () => {
+        async function initAuth() {
             try {
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                     await signInWithCustomToken(auth, __initial_auth_token);
                 } else {
                     await signInAnonymously(auth);
                 }
-            } catch (error) {
-                console.error("Auth initialization failed:", error);
-                authStatus.innerText = "Connection failed. Please refresh.";
-            }
-        };
-
-        // Step 2: Handle Auth State Changes
-        onAuthStateChanged(auth, (user) => {
-            currentUser = user;
-            if (user) {
-                authStatus.innerText = `Connected as User: ${user.uid}`;
-                loadingStatus.innerText = "Loading trail data...";
+                isAuthReady = true;
                 startListener();
-            } else {
-                authStatus.innerText = "Connecting...";
+            } catch (err) {
+                console.error("Auth error:", err);
+                // Attempt listener anyway, though permissions might fail
+                startListener();
             }
-        });
+        }
 
-        // Step 3: Start Firestore listener only after Auth (RULE 1 & 3)
         function startListener() {
-            if (!currentUser) return;
-            
-            // Cleanup existing listener
-            if (unsubscribeHikes) unsubscribeHikes();
-
-            // Correct Firestore Path (RULE 1)
-            const hikesCollection = collection(db, 'artifacts', appId, 'public', 'data', 'hikes');
-            const q = query(hikesCollection);
-
-            unsubscribeHikes = onSnapshot(q, (snap) => {
+            if (unsubscribe) unsubscribe();
+            const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'hikes'));
+            unsubscribe = onSnapshot(q, (snap) => {
                 currentHikes = snap.docs.map(d => ({ id: d.id, ...d.data() }));
                 render();
-                loadingStatus.classList.add('hidden');
+                document.getElementById('loading').classList.add('hidden');
+                
+                const openModalHikeId = document.getElementById('modal').dataset.activeHikeId;
+                if(openModalHikeId) {
+                    const freshHike = currentHikes.find(h => h.id === openModalHikeId);
+                    if(freshHike) updateParticipantDisplay(freshHike);
+                }
             }, (err) => {
-                console.error("Firestore Error:", err);
-                loadingStatus.innerText = "Error loading data. Check permissions.";
+                console.error("Firestore error:", err);
+                document.getElementById('loading').innerText = "Permission error. Ensure Anonymous Auth is enabled and Rules are set.";
             });
         }
 
-        // Initialize
-        initAuth();
-
-        window.changeMonth = (dir) => {
-            viewDate.setMonth(viewDate.getMonth() + dir);
-            render();
-        };
+        window.changeMonth = (dir) => { viewDate.setMonth(viewDate.getMonth() + dir); render(); };
 
         function render() {
             const year = viewDate.getFullYear();
             const month = viewDate.getMonth();
-            monthDisplay.innerText = viewDate.toLocaleString('default', { month: 'long', year: 'numeric' });
-
-            // Clear days (keep headers)
-            const headers = Array.from(calendarGrid.querySelectorAll('.day-header'));
-            calendarGrid.innerHTML = '';
-            headers.forEach(h => calendarGrid.appendChild(h));
+            document.getElementById('month-display').innerText = viewDate.toLocaleString('default', { month: 'long', year: 'numeric' });
+            const grid = document.getElementById('calendar-grid');
+            const headers = Array.from(grid.querySelectorAll('.day-header'));
+            grid.innerHTML = '';
+            headers.forEach(h => grid.appendChild(h));
 
             const firstDay = new Date(year, month, 1).getDay();
             const totalDays = new Date(year, month + 1, 0).getDate();
 
-            for (let i = 0; i < firstDay; i++) {
-                const empty = document.createElement('div');
-                empty.className = 'calendar-day bg-gray-50';
-                calendarGrid.appendChild(empty);
-            }
+            for (let i = 0; i < firstDay; i++) grid.appendChild(Object.assign(document.createElement('div'), {className: 'calendar-day bg-gray-50'}));
 
             for (let d = 1; d <= totalDays; d++) {
-                const dayCell = document.createElement('div');
-                dayCell.className = 'calendar-day';
-                dayCell.innerHTML = `<span class="calendar-day-number">${d}</span>`;
-                
+                const dayCell = Object.assign(document.createElement('div'), {className: 'calendar-day', innerHTML: `<span class="calendar-day-number">${d}</span>`});
                 const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-                const hikes = currentHikes.filter(h => h.date === dateStr);
-                
-                hikes.forEach(h => {
-                    const item = document.createElement('div');
-                    item.className = 'hike-item-calendar';
-                    item.innerText = h.name;
-                    item.onclick = () => openHike(h);
+                currentHikes.filter(h => h.date === dateStr).forEach(h => {
+                    const item = Object.assign(document.createElement('div'), {className: 'hike-item-calendar', innerText: h.name, onclick: () => openHike(h)});
                     dayCell.appendChild(item);
                 });
-
-                calendarGrid.appendChild(dayCell);
+                grid.appendChild(dayCell);
             }
         }
 
         function openHike(hike) {
             const modal = document.getElementById('modal');
-            const title = document.getElementById('modal-title');
-            const content = document.getElementById('modal-content');
+            modal.dataset.activeHikeId = hike.id;
+            document.getElementById('modal-title').innerText = hike.name;
+            document.getElementById('modal-content').innerHTML = `
+                <p><strong>Club:</strong> ${hike.club}</p><p><strong>Distance:</strong> ${hike.distance} km</p>
+                <p><strong>Location:</strong> ${hike.location}</p>
+                <div class="mt-4 border-t pt-2">${hike.description || ''}</div>
+            `;
+            
+            updateParticipantDisplay(hike);
+
             const delBtn = document.getElementById('delete-btn');
             const editBtn = document.getElementById('edit-btn');
+            const joinBtn = document.getElementById('join-btn');
 
-            title.innerText = hike.name;
-            content.innerHTML = `
-                <p><strong>Club:</strong> ${hike.club}</p>
-                <p><strong>Distance:</strong> ${hike.distance} km</p>
-                <p><strong>Location:</strong> ${hike.location}</p>
-                <div class="mt-4 border-t pt-2">${hike.description || 'No description provided.'}</div>
-                <div class="mt-6 pt-4 border-t border-gray-100 bg-gray-50 p-2 rounded text-[10px] text-gray-500 font-mono overflow-hidden text-ellipsis">
-                    Organized by: ${hike.userId}
-                </div>
-            `;
+            delBtn.onclick = async () => { if(confirm("Are you sure?")) { await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'hikes', hike.id)); closeModal(); }};
+            editBtn.onclick = () => { prepareEdit(hike); closeModal(); };
 
-            if (currentUser && hike.userId === currentUser.uid) {
-                delBtn.classList.remove('hidden');
-                editBtn.classList.remove('hidden');
-                delBtn.onclick = async () => {
-                    if (confirm("Delete this hike?")) {
-                        await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'hikes', hike.id));
-                        closeModal();
-                    }
-                };
-                editBtn.onclick = () => {
-                    prepareEdit(hike);
-                    closeModal();
-                };
-            } else {
-                delBtn.classList.add('hidden');
-                editBtn.classList.add('hidden');
-            }
+            joinBtn.onclick = async () => {
+                const nameInput = document.getElementById('join-name');
+                if(!nameInput.value.trim()) return;
+                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'hikes', hike.id), {
+                    participants: arrayUnion(nameInput.value.trim())
+                });
+                nameInput.value = '';
+            };
 
-            modal.classList.remove('hidden');
             modal.style.display = 'flex';
         }
 
+        function updateParticipantDisplay(hike) {
+            const list = document.getElementById('participant-list');
+            list.innerHTML = '';
+            if (hike.participants && hike.participants.length > 0) {
+                hike.participants.forEach(p => {
+                    const tag = Object.assign(document.createElement('span'), {className: 'participant-tag', innerText: p});
+                    list.appendChild(tag);
+                });
+            } else {
+                list.innerHTML = '<span class="text-gray-400 text-sm">No one has joined yet.</span>';
+            }
+        }
+
         window.closeModal = () => {
-            document.getElementById('modal').style.display = 'none';
+            const modal = document.getElementById('modal');
+            modal.style.display = 'none';
+            delete modal.dataset.activeHikeId;
         };
 
         function prepareEdit(hike) {
@@ -383,56 +252,44 @@
             document.getElementById('hike-club').value = hike.club;
             document.getElementById('hike-date').value = hike.date;
             document.getElementById('hike-distance').value = hike.distance;
-            editor.innerHTML = hike.description;
-
-            document.getElementById('form-title').innerText = "Edit Hike Details";
+            document.getElementById('hike-description-editor').innerHTML = hike.description;
+            document.getElementById('form-title').innerText = "Edit Hike";
             document.getElementById('submit-btn').innerText = "Update Hike";
             document.getElementById('cancel-edit-btn').classList.remove('hidden');
-            document.getElementById('add-hike-form').scrollIntoView();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         window.resetForm = () => {
-            hikeForm.reset();
-            editor.innerHTML = '';
+            document.getElementById('add-hike-form').reset();
+            document.getElementById('hike-description-editor').innerHTML = '';
             document.getElementById('hike-id-to-edit').value = '';
             document.getElementById('form-title').innerText = "Plan a New Hike";
             document.getElementById('submit-btn').innerText = "Schedule Hike";
             document.getElementById('cancel-edit-btn').classList.add('hidden');
         };
 
-        hikeForm.onsubmit = async (e) => {
+        document.getElementById('add-hike-form').onsubmit = async (e) => {
             e.preventDefault();
-            if (!currentUser) {
-                alert("You must be connected to schedule a hike.");
-                return;
-            }
-
-            const hikeId = document.getElementById('hike-id-to-edit').value;
+            const id = document.getElementById('hike-id-to-edit').value;
             const data = {
                 name: document.getElementById('hike-name').value,
                 location: document.getElementById('hike-location').value,
                 club: document.getElementById('hike-club').value,
                 date: document.getElementById('hike-date').value,
                 distance: document.getElementById('hike-distance').value,
-                description: editor.innerHTML,
-                userId: currentUser.uid,
+                description: document.getElementById('hike-description-editor').innerHTML,
                 updatedAt: new Date().toISOString()
             };
-
-            try {
-                const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'hikes');
-                if (hikeId) {
-                    await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'hikes', hikeId), data);
-                } else {
-                    await addDoc(colRef, data);
-                }
-                resetForm();
-            } catch (err) {
-                console.error("Save Error:", err);
-                alert("Failed to save. This might be due to missing permissions.");
+            if(id) {
+                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'hikes', id), data);
+            } else {
+                data.participants = [];
+                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'hikes'), data);
             }
+            resetForm();
         };
 
+        initAuth();
     </script>
 </body>
 </html>
