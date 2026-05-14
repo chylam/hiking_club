@@ -1,296 +1,370 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="robots" content="noindex, nofollow">
-    <title>Hiking Schedule Manager</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #f7fafc; }
-        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; border: 1px solid #e2e8f0; border-radius: 0.5rem; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
-        .day-header, .calendar-day { text-align: center; padding: 8px 4px; min-height: 100px; background-color: white; position: relative; }
-        .day-header { background-color: #e2e8f0; color: #4a5568; font-weight: 600; padding: 12px 4px; }
-        .calendar-day { border-bottom: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; display: flex; flex-direction: column; align-items: flex-start; padding-top: 25px; overflow: auto; }
-        .calendar-day:nth-child(7n) { border-right: none; }
-        .calendar-day-number { position: absolute; top: 4px; left: 8px; font-size: 1.1rem; font-weight: 700; color: #4a5568; }
-        .hike-item-calendar { width: 100%; text-align: left; margin-bottom: 4px; padding: 4px; border-radius: 4px; font-size: 0.75rem; font-weight: 500; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; cursor: pointer; background-color: #a7f3d0; color: #065f46; transition: background-color 0.2s; }
-        .hike-item-calendar:hover { background-color: #6ee7b7; }
-        #hike-description-editor:empty:before { content: attr(placeholder); color: #9ca3af; pointer-events: none; }
-        .editor-btn { padding: 4px 8px; border-radius: 4px; background-color: #fff; color: #10b981; font-weight: 600; }
-        .fixed-unit { display: flex; align-items: center; justify-content: center; background-color: #e5e7eb; color: #4b5563; font-weight: 600; padding: 0 12px; border: 1px solid #d1d5db; border-left: none; border-radius: 0 0.5rem 0.5rem 0; }
-        .participant-tag { background: #d1fae5; color: #065f46; padding: 2px 8px; border-radius: 999px; font-size: 0.8rem; display: inline-block; margin: 2px; border: 1px solid #6ee7b7; }
-    </style>
-</head>
-<body class="min-h-screen p-4 md:p-8">
 
-    <div class="max-w-6xl mx-auto bg-white shadow-xl rounded-xl p-6 border-t-8 border-green-600">
-        <header class="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-                <h1 class="text-4xl font-extrabold text-gray-900 flex items-center">
-                    <span class="mr-3">🥾</span> Trail Tracker
-                </h1>
-                <p class="text-sm text-gray-500 mt-2">Plan and share your next adventure.</p>
-            </div>
-        </header>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --forest:#2D5A27;--forest-light:#3d7a34;--trail:#8B6914;--sky:#1a5c8a;
+  --bark:#5c3d1e;--leaf:#e8f4e8;--stone:#f4f1eb;--mist:#fafaf7;
+}
+body{font-family:var(--font-sans);background:var(--color-background-tertiary);color:var(--color-text-primary)}
 
-        <section id="create-hike-section" class="mb-8 p-6 bg-green-50 rounded-lg">
-            <h2 id="form-title" class="text-2xl font-semibold text-green-700 mb-4">Plan a New Hike</h2>
-            <form id="add-hike-form" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <input type="hidden" id="hike-id-to-edit">
-                <input type="text" id="hike-name" required placeholder="Hike Name" class="p-3 border border-green-300 rounded-lg">
-                <input type="text" id="hike-location" required placeholder="Location" class="p-3 border border-green-300 rounded-lg">
-                <div class="flex items-center space-x-2">
-                    <label class="text-gray-600 font-medium">Club:</label>
-                    <select id="hike-club" class="p-3 border border-green-300 rounded-lg w-full bg-white">
-                        <option value="TORONTO">Toronto</option>
-                        <option value="NIAGARA">Niagara</option>
-                        <option value="BVALLEY">Beaver Valley</option>
-                        <option value="PENINSULA">Peninsula</option>
-                    </select>
-                </div>
-                <input type="date" id="hike-date" required class="p-3 border border-green-300 rounded-lg">
-                <div class="flex">
-                    <input type="number" id="hike-distance" required placeholder="Distance" class="p-3 border border-green-300 rounded-l-lg w-full">
-                    <div class="fixed-unit">km</div>
-                </div>
-                <div class="md:col-span-2">
-                    <div class="bg-gray-100 p-2 rounded-t-lg flex space-x-2 border border-green-300 border-b-0">
-                        <button type="button" class="editor-btn" onclick="formatDoc('bold')">B</button>
-                        <button type="button" class="editor-btn" onclick="formatDoc('italic')">I</button>
-                        <button type="button" class="editor-btn text-blue-600" onclick="insertLink()">Link</button>
-                    </div>
-                    <div id="hike-description-editor" contenteditable="true" class="p-3 border border-green-300 rounded-b-lg min-h-[100px] bg-white focus:outline-none" placeholder="Hike details..."></div>
-                </div>
-                <div class="md:col-span-2 flex space-x-2">
-                    <button type="submit" id="submit-btn" class="flex-grow bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg transition shadow-md">Schedule Hike</button>
-                    <button type="button" id="cancel-edit-btn" class="hidden px-6 bg-gray-400 text-white font-bold rounded-lg" onclick="resetForm()">Cancel</button>
-                </div>
-            </form>
-        </section>
+.utility-bar{background:var(--forest);padding:6px 16px;display:flex;gap:12px;justify-content:flex-end;flex-wrap:wrap}
+.utility-bar a{color:#c8e6c4;font-size:11px;text-decoration:none;letter-spacing:.04em;text-transform:uppercase;font-weight:500}
+.utility-bar a:hover{color:#fff}
 
-        <section>
-            <div class="flex justify-between items-center mb-6 bg-gray-100 p-4 rounded-lg">
-                <button onclick="changeMonth(-1)" class="text-green-600 font-bold hover:scale-110 transition">◀ Prev</button>
-                <h3 id="month-display" class="text-xl font-bold text-gray-800"></h3>
-                <button onclick="changeMonth(1)" class="text-green-600 font-bold hover:scale-110 transition">Next ▶</button>
-            </div>
-            <div class="calendar-grid" id="calendar-grid">
-                <div class="day-header">Sun</div><div class="day-header">Mon</div><div class="day-header">Tue</div><div class="day-header">Wed</div><div class="day-header">Thu</div><div class="day-header">Fri</div><div class="day-header">Sat</div>
-            </div>
-            <div id="loading" class="text-center py-10 text-gray-500">Loading trail data...</div>
-        </section>
+.main-header{background:var(--color-background-primary);border-bottom:0.5px solid var(--color-border-tertiary);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.logo-area{display:flex;align-items:center;gap:10px}
+.logo-badge{width:38px;height:38px;background:var(--forest);border-radius:6px;display:flex;align-items:center;justify-content:center}
+.logo-badge svg{width:22px;height:22px;fill:#fff}
+.site-title{font-size:15px;font-weight:500;color:var(--color-text-primary);line-height:1.2}
+.site-sub{font-size:11px;color:var(--color-text-secondary)}
+.hamburger{background:none;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);padding:7px 10px;cursor:pointer;display:flex;flex-direction:column;gap:4px}
+.hamburger span{width:18px;height:2px;background:var(--color-text-primary);border-radius:1px;display:block}
+
+.main-nav{background:var(--color-background-primary);border-bottom:0.5px solid var(--color-border-tertiary);padding:0 16px;display:none;flex-direction:column}
+.main-nav.open{display:flex}
+.main-nav a{padding:11px 0;font-size:13px;font-weight:500;color:var(--color-text-secondary);text-decoration:none;border-bottom:0.5px solid var(--color-border-tertiary);display:block;letter-spacing:.02em}
+.main-nav a:last-child{border-bottom:none}
+.main-nav a:hover{color:var(--forest)}
+
+.hero-strip{background:linear-gradient(135deg,#2a5225 0%,#3d7a34 60%,#4e8f45 100%);padding:18px 16px;color:#fff;position:relative;overflow:hidden}
+.hero-strip::after{content:'';position:absolute;right:-20px;top:-10px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.05)}
+.hero-strip h1{font-size:20px;font-weight:500;margin-bottom:4px}
+.hero-strip p{font-size:13px;opacity:.85;line-height:1.5}
+.hero-strip .cta-link{display:inline-block;margin-top:10px;background:rgba(255,255,255,.15);border:0.5px solid rgba(255,255,255,.3);color:#fff;text-decoration:none;font-size:12px;padding:6px 14px;border-radius:var(--border-radius-md);font-weight:500}
+
+.page-body{max-width:720px;margin:0 auto;padding:0 0 40px}
+
+.filter-section{background:var(--color-background-primary);margin:12px 16px;border-radius:var(--border-radius-lg);border:0.5px solid var(--color-border-tertiary);overflow:hidden}
+.filter-toggle{width:100%;display:flex;align-items:center;justify-content:space-between;padding:13px 16px;background:none;border:none;cursor:pointer;font-size:14px;font-weight:500;color:var(--color-text-primary)}
+.filter-toggle i{font-size:16px;color:var(--color-text-secondary);transition:transform .25s}
+.filter-toggle.open i{transform:rotate(180deg)}
+.filter-body{display:none;padding:0 16px 16px;border-top:0.5px solid var(--color-border-tertiary)}
+.filter-body.open{display:block}
+.filter-label{font-size:11px;font-weight:500;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:.06em;margin:14px 0 8px}
+.chip-row{display:flex;flex-wrap:wrap;gap:6px}
+.chip{padding:5px 12px;border-radius:20px;font-size:12px;font-weight:500;border:0.5px solid var(--color-border-secondary);background:var(--color-background-secondary);color:var(--color-text-secondary);cursor:pointer;transition:all .15s}
+.chip.active,.chip:hover{background:var(--forest);color:#fff;border-color:var(--forest)}
+.distance-row{display:flex;align-items:center;gap:10px;margin-top:8px}
+.distance-row label{font-size:12px;color:var(--color-text-secondary);white-space:nowrap}
+.distance-row input[type=range]{flex:1}
+.distance-val{font-size:13px;font-weight:500;min-width:40px;text-align:right;color:var(--forest)}
+.apply-btn{margin-top:14px;width:100%;padding:10px;background:var(--forest);color:#fff;border:none;border-radius:var(--border-radius-md);font-size:14px;font-weight:500;cursor:pointer}
+.apply-btn:hover{background:var(--forest-light)}
+
+.club-scroll-wrap{padding:12px 16px 4px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.club-scroll-wrap::-webkit-scrollbar{display:none}
+.club-pills{display:flex;gap:8px;min-width:max-content}
+.club-pill{padding:7px 14px;border-radius:20px;font-size:12px;font-weight:500;border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-secondary);cursor:pointer;white-space:nowrap;transition:all .15s}
+.club-pill.active{background:var(--forest);color:#fff;border-color:var(--forest)}
+.club-pill:hover:not(.active){background:var(--color-background-secondary)}
+
+.view-toggle{display:flex;gap:8px;padding:8px 16px;align-items:center}
+.view-toggle span{font-size:12px;color:var(--color-text-secondary);margin-right:4px}
+.view-btn{padding:6px 12px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);font-size:12px;background:none;cursor:pointer;color:var(--color-text-secondary);font-weight:500}
+.view-btn.active{background:var(--forest);color:#fff;border-color:var(--forest)}
+
+.month-nav{display:flex;align-items:center;justify-content:space-between;padding:4px 16px 8px}
+.month-nav button{background:none;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);padding:5px 10px;cursor:pointer;font-size:13px;color:var(--color-text-secondary)}
+.month-nav button:hover{background:var(--color-background-secondary)}
+.month-nav h2{font-size:16px;font-weight:500}
+
+.hike-list{padding:0 16px;display:flex;flex-direction:column;gap:10px}
+
+.hike-card{background:var(--color-background-primary);border-radius:var(--border-radius-lg);border:0.5px solid var(--color-border-tertiary);overflow:hidden;transition:box-shadow .15s}
+.hike-card:hover{border-color:var(--color-border-secondary)}
+.hike-card-inner{padding:14px}
+.hike-date-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.hike-date-badge{background:#e8f4e8;color:#2d5a27;font-size:11px;font-weight:500;padding:3px 8px;border-radius:20px;white-space:nowrap}
+.hike-time{font-size:12px;color:var(--color-text-secondary)}
+.paid-badge{background:#fff8e1;color:#856400;font-size:10px;font-weight:500;padding:2px 7px;border-radius:20px;border:0.5px solid #e6c300;margin-left:auto}
+.hike-title{font-size:15px;font-weight:500;color:var(--color-text-primary);margin-bottom:6px;line-height:1.35}
+.hike-meta{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.meta-tag{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--color-text-secondary)}
+.meta-tag i{font-size:13px}
+.hike-desc{font-size:13px;color:var(--color-text-secondary);line-height:1.55;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.hike-footer{display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--color-background-secondary);border-top:0.5px solid var(--color-border-tertiary)}
+.club-tag{font-size:11px;font-weight:500;color:var(--forest)}
+.register-btn{margin-left:auto;background:var(--forest);color:#fff;border:none;border-radius:var(--border-radius-md);padding:7px 14px;font-size:12px;font-weight:500;cursor:pointer;white-space:nowrap}
+.register-btn:hover{background:var(--forest-light)}
+.members-only{font-size:10px;color:var(--trail);font-weight:500}
+
+.tip-box{margin:12px 16px 0;background:var(--color-background-info);border:0.5px solid var(--color-border-info);border-radius:var(--border-radius-md);padding:10px 14px;display:flex;gap:10px;align-items:flex-start}
+.tip-box i{color:var(--color-text-info);font-size:16px;margin-top:1px;flex-shrink:0}
+.tip-box p{font-size:12px;color:var(--color-text-info);line-height:1.5}
+
+.section-divider{display:flex;align-items:center;gap:8px;padding:4px 16px 8px;font-size:11px;font-weight:500;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:.06em}
+.section-divider::after{content:'';flex:1;height:0.5px;background:var(--color-border-tertiary)}
+
+@media(min-width:500px){
+  .hamburger{display:none}
+  .main-nav{display:flex!important;flex-direction:row;padding:0 16px;border-bottom-width:0.5px}
+  .main-nav a{padding:0;line-height:42px;border-bottom:none;margin-right:20px;font-size:12px}
+  .filter-body{display:block!important;padding:12px 16px 16px}
+  .filter-toggle i.expand-icon{display:none}
+}
+</style>
+
+<h2 class="sr-only">Hike schedule website mockup showing mobile-friendly design inspired by Bruce Trail, with collapsible filters, scrollable club tabs, and list view of upcoming hikes.</h2>
+
+<div style="max-width:420px;margin:0 auto;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-lg);overflow:hidden;background:var(--color-background-tertiary)">
+
+  <div class="utility-bar">
+    <a href="#">My Account</a>
+    <a href="#">Join / Renew</a>
+    <a href="#">Donate</a>
+  </div>
+
+  <div class="main-header">
+    <div class="logo-area">
+      <div class="logo-badge">
+        <svg viewBox="0 0 24 24"><path d="M12 2C7 2 3 6 3 11c0 3.5 2 6.5 5 8l4 3 4-3c3-1.5 5-4.5 5-8 0-5-4-9-9-9zm0 2l1.5 4h4l-3.5 2.5 1.5 4-3.5-2.5L8.5 14.5l1.5-4L6.5 8h4z"/></svg>
+      </div>
+      <div>
+        <div class="site-title">Chy Lam Trail Club</div>
+        <div class="site-sub">Hike Schedule</div>
+      </div>
+    </div>
+    <button class="hamburger" id="ham" aria-label="Open menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+
+  <nav class="main-nav" id="mainnav">
+    <a href="#">About Us</a>
+    <a href="#">Explore the Trail</a>
+    <a href="#">Get Involved</a>
+    <a href="#">Ways to Give</a>
+  </nav>
+
+  <div class="hero-strip">
+    <h1>Join us for a hike</h1>
+    <p>Registration required. All hikes open to members.<br>Some open to non-members.</p>
+    <a href="#" class="cta-link">Read hiker guidelines →</a>
+  </div>
+
+  <div class="page-body">
+
+    <div class="tip-box">
+      <i class="ti ti-info-circle" aria-hidden="true"></i>
+      <p>List view shows all hikes for the day. Tap any card to see full details and register.</p>
     </div>
 
-    <div id="modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-xl max-w-lg w-full p-6 shadow-2xl">
-            <h2 id="modal-title" class="text-2xl font-bold mb-2 text-green-800"></h2>
-            <div id="modal-content" class="text-gray-700 space-y-2 mb-4"></div>
-            
-            <div class="mt-4 border-t pt-4">
-                <h4 class="font-bold text-gray-800 mb-2">Participants:</h4>
-                <div id="participant-list" class="flex flex-wrap gap-1 mb-4"></div>
-                
-                <div id="join-controls" class="flex gap-2">
-                    <input type="text" id="join-name" placeholder="Enter your name to join" class="flex-grow p-2 border border-gray-300 rounded-lg text-sm">
-                    <button id="join-btn" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-bold">Join Hike</button>
-                </div>
-            </div>
+    <div class="club-scroll-wrap" role="tablist" aria-label="Filter by club">
+      <div class="club-pills">
+        <div class="club-pill active" role="tab" aria-selected="true">All Clubs</div>
+        <div class="club-pill" role="tab">Niagara</div>
+        <div class="club-pill" role="tab">Iroquoia</div>
+        <div class="club-pill" role="tab">Toronto</div>
+        <div class="club-pill" role="tab">Caledon Hills</div>
+        <div class="club-pill" role="tab">Dufferin</div>
+        <div class="club-pill" role="tab">Blue Mtns</div>
+        <div class="club-pill" role="tab">Peninsula</div>
+      </div>
+    </div>
 
-            <div class="flex justify-end space-x-2 border-t mt-6 pt-4">
-                <button onclick="closeModal()" class="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">Close</button>
-                <button id="edit-btn" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Edit</button>
-                <button id="delete-btn" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">Delete</button>
-            </div>
+    <div class="filter-section">
+      <button class="filter-toggle" id="ftoggle" aria-expanded="false" aria-controls="fbody">
+        <span><i class="ti ti-adjustments-horizontal" aria-hidden="true" style="margin-right:7px;font-size:15px;vertical-align:-2px"></i>Filter hikes</span>
+        <i class="ti ti-chevron-down expand-icon" aria-hidden="true"></i>
+      </button>
+      <div class="filter-body" id="fbody" role="region">
+        <div class="filter-label">Terrain</div>
+        <div class="chip-row">
+          <div class="chip">Easy</div>
+          <div class="chip active">Moderate</div>
+          <div class="chip">Strenuous</div>
+          <div class="chip">Difficult</div>
         </div>
+        <div class="filter-label">Pace</div>
+        <div class="chip-row">
+          <div class="chip">Leisurely</div>
+          <div class="chip active">Medium</div>
+          <div class="chip">Brisk</div>
+          <div class="chip">Fast</div>
+        </div>
+        <div class="filter-label">Max distance (km)</div>
+        <div class="distance-row">
+          <label for="dist">0 km</label>
+          <input type="range" id="dist" min="0" max="40" value="25" step="1">
+          <span class="distance-val" id="distval">25 km</span>
+        </div>
+        <button class="apply-btn">Apply filters</button>
+      </div>
     </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot, query, arrayUnion } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px 0">
+      <div class="view-toggle" style="padding:0;gap:6px">
+        <span>View:</span>
+        <button class="view-btn active">List</button>
+        <button class="view-btn">Calendar</button>
+        <button class="view-btn">Cards</button>
+      </div>
+    </div>
 
-        // Your web app's Firebase configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyCIhe9jsgRjz5FE8ZxvJgnxyVjDonqBDbU",
-            authDomain: "hiking-club-f4d81.firebaseapp.com",
-            projectId: "hiking-club-f4d81",
-            storageBucket: "hiking-club-f4d81.firebasestorage.app",
-            messagingSenderId: "509289134199",
-            appId: "1:509289134199:web:e28bdc440ad9cd7e6eae72"
-        };
+    <div class="month-nav">
+      <button><i class="ti ti-chevron-left" aria-hidden="true"></i> Apr</button>
+      <h2>May 2026</h2>
+      <button>Jun <i class="ti ti-chevron-right" aria-hidden="true"></i></button>
+    </div>
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        const appId = 'hiking-club';
+    <div class="section-divider">Friday, May 1</div>
 
-        let currentHikes = [];
-        let viewDate = new Date();
-        let unsubscribe = null;
-        let isAuthReady = false;
+    <div class="hike-list">
 
-        window.formatDoc = (cmd) => document.execCommand(cmd, false, null);
-        window.insertLink = () => { const url = prompt("URL:"); if(url) document.execCommand('createLink', false, url); };
+      <div class="hike-card">
+        <div class="hike-card-inner">
+          <div class="hike-date-row">
+            <span class="hike-date-badge">Fri May 1</span>
+            <span class="hike-time"><i class="ti ti-clock" aria-hidden="true" style="font-size:12px;vertical-align:-1px;margin-right:2px"></i>9:00 – 10:30 AM</span>
+            <span class="paid-badge">Members only</span>
+          </div>
+          <div class="hike-title">Queenston Tour</div>
+          <div class="hike-meta">
+            <span class="meta-tag"><i class="ti ti-walk" aria-hidden="true"></i> Medium pace</span>
+            <span class="meta-tag"><i class="ti ti-mountain" aria-hidden="true"></i> Moderate</span>
+            <span class="meta-tag"><i class="ti ti-route" aria-hidden="true"></i> 6–7 km</span>
+            <span class="meta-tag"><i class="ti ti-map-pin" aria-hidden="true"></i> Niagara River Pkwy</span>
+          </div>
+          <div class="hike-desc">Hike down the escarpment to the village of Queenston, explore the village and waterfront before climbing back up. Mostly paved roads with some trail walking.</div>
+        </div>
+        <div class="hike-footer">
+          <span class="club-tag">Niagara Club</span>
+          <button class="register-btn">Register →</button>
+        </div>
+      </div>
 
-        async function initAuth() {
-            try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
-                isAuthReady = true;
-                startListener();
-            } catch (err) {
-                console.error("Auth error:", err);
-                // Attempt listener anyway, though permissions might fail
-                startListener();
-            }
-        }
+      <div class="hike-card">
+        <div class="hike-card-inner">
+          <div class="hike-date-row">
+            <span class="hike-date-badge">Fri May 1</span>
+            <span class="hike-time"><i class="ti ti-clock" aria-hidden="true" style="font-size:12px;vertical-align:-1px;margin-right:2px"></i>9:15 AM – 4:00 PM</span>
+            <span class="paid-badge">Members only</span>
+          </div>
+          <div class="hike-title">Dundas Valley</div>
+          <div class="hike-meta">
+            <span class="meta-tag"><i class="ti ti-walk" aria-hidden="true"></i> Medium pace</span>
+            <span class="meta-tag"><i class="ti ti-mountain" aria-hidden="true"></i> Moderate</span>
+            <span class="meta-tag"><i class="ti ti-route" aria-hidden="true"></i> 16–17 km</span>
+            <span class="meta-tag"><i class="ti ti-map-pin" aria-hidden="true"></i> 650 Governor's Rd</span>
+          </div>
+          <div class="hike-desc">Bruce Trail and DVCA trails through the Dundas Valley. Lots of ups, downs, and waterfalls. Two loops — option to exit after 10 km.</div>
+        </div>
+        <div class="hike-footer">
+          <span class="club-tag">Dufferin Hi-Land</span>
+          <button class="register-btn">Register →</button>
+        </div>
+      </div>
 
-        function startListener() {
-            if (unsubscribe) unsubscribe();
-            const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'hikes'));
-            unsubscribe = onSnapshot(q, (snap) => {
-                currentHikes = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                render();
-                document.getElementById('loading').classList.add('hidden');
-                
-                const openModalHikeId = document.getElementById('modal').dataset.activeHikeId;
-                if(openModalHikeId) {
-                    const freshHike = currentHikes.find(h => h.id === openModalHikeId);
-                    if(freshHike) updateParticipantDisplay(freshHike);
-                }
-            }, (err) => {
-                console.error("Firestore error:", err);
-                document.getElementById('loading').innerText = "Permission error. Ensure Anonymous Auth is enabled and Rules are set.";
-            });
-        }
+      <div class="hike-card" style="border-color:#c8e6c4">
+        <div class="hike-card-inner">
+          <div class="hike-date-row">
+            <span class="hike-date-badge">Fri May 1</span>
+            <span class="hike-time"><i class="ti ti-clock" aria-hidden="true" style="font-size:12px;vertical-align:-1px;margin-right:2px"></i>8:00 – 9:30 PM</span>
+            <span class="paid-badge" style="background:#e8f4e8;color:#2d5a27;border-color:#a5d6a7">Moonlight</span>
+          </div>
+          <div class="hike-title">Moonlight Hike — Grimsby Escarpment</div>
+          <div class="hike-meta">
+            <span class="meta-tag"><i class="ti ti-walk" aria-hidden="true"></i> Medium/Brisk</span>
+            <span class="meta-tag"><i class="ti ti-mountain" aria-hidden="true"></i> Strenuous</span>
+            <span class="meta-tag"><i class="ti ti-route" aria-hidden="true"></i> 5–6 km</span>
+            <span class="meta-tag"><i class="ti ti-moon" aria-hidden="true"></i> Headlamp required</span>
+          </div>
+          <div class="hike-desc">Earn the Iroquoia Moonlight badge. Hike up the escarpment to Hawkwatch and Beamer's Falls. Everyone must bring a headlamp or flashlight.</div>
+        </div>
+        <div class="hike-footer">
+          <span class="club-tag">Iroquoia Club</span>
+          <span class="members-only">Badge: $10 members / $15 non</span>
+          <button class="register-btn">Register →</button>
+        </div>
+      </div>
 
-        window.changeMonth = (dir) => { viewDate.setMonth(viewDate.getMonth() + dir); render(); };
+    </div>
 
-        function render() {
-            const year = viewDate.getFullYear();
-            const month = viewDate.getMonth();
-            document.getElementById('month-display').innerText = viewDate.toLocaleString('default', { month: 'long', year: 'numeric' });
-            const grid = document.getElementById('calendar-grid');
-            const headers = Array.from(grid.querySelectorAll('.day-header'));
-            grid.innerHTML = '';
-            headers.forEach(h => grid.appendChild(h));
+    <div class="section-divider" style="margin-top:16px">Saturday, May 2</div>
 
-            const firstDay = new Date(year, month, 1).getDay();
-            const totalDays = new Date(year, month + 1, 0).getDate();
+    <div class="hike-list">
+      <div class="hike-card">
+        <div class="hike-card-inner">
+          <div class="hike-date-row">
+            <span class="hike-date-badge">Sat May 2</span>
+            <span class="hike-time"><i class="ti ti-clock" aria-hidden="true" style="font-size:12px;vertical-align:-1px;margin-right:2px"></i>8:30 AM – 1:00 PM</span>
+          </div>
+          <div class="hike-title">Boyd Conservation Park, Vaughan</div>
+          <div class="hike-meta">
+            <span class="meta-tag"><i class="ti ti-walk" aria-hidden="true"></i> Moderate 3–4 km/h</span>
+            <span class="meta-tag"><i class="ti ti-mountain" aria-hidden="true"></i> Hilly</span>
+            <span class="meta-tag"><i class="ti ti-route" aria-hidden="true"></i> 12–14 km</span>
+            <span class="meta-tag"><i class="ti ti-car" aria-hidden="true"></i> Free parking</span>
+          </div>
+          <div class="hike-desc">Hike Boyd conservation park trails through beautiful valleys. Bring water, snacks, and hiking poles are recommended.</div>
+        </div>
+        <div class="hike-footer">
+          <span class="club-tag">Toronto Club</span>
+          <button class="register-btn">Register →</button>
+        </div>
+      </div>
 
-            for (let i = 0; i < firstDay; i++) grid.appendChild(Object.assign(document.createElement('div'), {className: 'calendar-day bg-gray-50'}));
+      <div class="hike-card">
+        <div class="hike-card-inner">
+          <div class="hike-date-row">
+            <span class="hike-date-badge">Sat May 2</span>
+            <span class="hike-time"><i class="ti ti-clock" aria-hidden="true" style="font-size:12px;vertical-align:-1px;margin-right:2px"></i>9:00 AM – 12:00 PM</span>
+          </div>
+          <div class="hike-title">Wandering Amongst the Wildflowers</div>
+          <div class="hike-meta">
+            <span class="meta-tag"><i class="ti ti-walk" aria-hidden="true"></i> Leisurely</span>
+            <span class="meta-tag"><i class="ti ti-mountain" aria-hidden="true"></i> Easy</span>
+            <span class="meta-tag"><i class="ti ti-route" aria-hidden="true"></i> ~4 km</span>
+            <span class="meta-tag"><i class="ti ti-leaf" aria-hidden="true"></i> Wildflower focus</span>
+          </div>
+          <div class="hike-desc">Meet at Tim Hortons, 1st St Collingwood, carpool to Nottawasaga Lookout. Leisurely hike to observe and identify spring ephemerals. Limited to 12.</div>
+        </div>
+        <div class="hike-footer">
+          <span class="club-tag">Blue Mountains</span>
+          <button class="register-btn">Register →</button>
+        </div>
+      </div>
+    </div>
 
-            for (let d = 1; d <= totalDays; d++) {
-                const dayCell = Object.assign(document.createElement('div'), {className: 'calendar-day', innerHTML: `<span class="calendar-day-number">${d}</span>`});
-                const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-                currentHikes.filter(h => h.date === dateStr).forEach(h => {
-                    const item = Object.assign(document.createElement('div'), {className: 'hike-item-calendar', innerText: h.name, onclick: () => openHike(h)});
-                    dayCell.appendChild(item);
-                });
-                grid.appendChild(dayCell);
-            }
-        }
+    <div style="padding:20px 16px 0;text-align:center">
+      <button style="background:none;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);padding:10px 24px;font-size:13px;font-weight:500;cursor:pointer;color:var(--color-text-secondary);width:100%">
+        <i class="ti ti-chevrons-down" aria-hidden="true" style="margin-right:6px"></i>Load more hikes
+      </button>
+    </div>
 
-        function openHike(hike) {
-            const modal = document.getElementById('modal');
-            modal.dataset.activeHikeId = hike.id;
-            document.getElementById('modal-title').innerText = hike.name;
-            document.getElementById('modal-content').innerHTML = `
-                <p><strong>Club:</strong> ${hike.club}</p><p><strong>Distance:</strong> ${hike.distance} km</p>
-                <p><strong>Location:</strong> ${hike.location}</p>
-                <div class="mt-4 border-t pt-2">${hike.description || ''}</div>
-            `;
-            
-            updateParticipantDisplay(hike);
+  </div>
+</div>
 
-            const delBtn = document.getElementById('delete-btn');
-            const editBtn = document.getElementById('edit-btn');
-            const joinBtn = document.getElementById('join-btn');
+<script>
+const ham = document.getElementById('ham');
+const nav = document.getElementById('mainnav');
+ham.addEventListener('click', () => nav.classList.toggle('open'));
 
-            delBtn.onclick = async () => { if(confirm("Are you sure?")) { await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'hikes', hike.id)); closeModal(); }};
-            editBtn.onclick = () => { prepareEdit(hike); closeModal(); };
+const ft = document.getElementById('ftoggle');
+const fb = document.getElementById('fbody');
+ft.addEventListener('click', () => {
+  ft.classList.toggle('open');
+  fb.classList.toggle('open');
+  ft.setAttribute('aria-expanded', ft.classList.contains('open'));
+});
 
-            joinBtn.onclick = async () => {
-                const nameInput = document.getElementById('join-name');
-                if(!nameInput.value.trim()) return;
-                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'hikes', hike.id), {
-                    participants: arrayUnion(nameInput.value.trim())
-                });
-                nameInput.value = '';
-            };
+const dist = document.getElementById('dist');
+const dv = document.getElementById('distval');
+dist.addEventListener('input', () => dv.textContent = dist.value + ' km');
 
-            modal.style.display = 'flex';
-        }
-
-        function updateParticipantDisplay(hike) {
-            const list = document.getElementById('participant-list');
-            list.innerHTML = '';
-            if (hike.participants && hike.participants.length > 0) {
-                hike.participants.forEach(p => {
-                    const tag = Object.assign(document.createElement('span'), {className: 'participant-tag', innerText: p});
-                    list.appendChild(tag);
-                });
-            } else {
-                list.innerHTML = '<span class="text-gray-400 text-sm">No one has joined yet.</span>';
-            }
-        }
-
-        window.closeModal = () => {
-            const modal = document.getElementById('modal');
-            modal.style.display = 'none';
-            delete modal.dataset.activeHikeId;
-        };
-
-        function prepareEdit(hike) {
-            document.getElementById('hike-id-to-edit').value = hike.id;
-            document.getElementById('hike-name').value = hike.name;
-            document.getElementById('hike-location').value = hike.location;
-            document.getElementById('hike-club').value = hike.club;
-            document.getElementById('hike-date').value = hike.date;
-            document.getElementById('hike-distance').value = hike.distance;
-            document.getElementById('hike-description-editor').innerHTML = hike.description;
-            document.getElementById('form-title').innerText = "Edit Hike";
-            document.getElementById('submit-btn').innerText = "Update Hike";
-            document.getElementById('cancel-edit-btn').classList.remove('hidden');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        window.resetForm = () => {
-            document.getElementById('add-hike-form').reset();
-            document.getElementById('hike-description-editor').innerHTML = '';
-            document.getElementById('hike-id-to-edit').value = '';
-            document.getElementById('form-title').innerText = "Plan a New Hike";
-            document.getElementById('submit-btn').innerText = "Schedule Hike";
-            document.getElementById('cancel-edit-btn').classList.add('hidden');
-        };
-
-        document.getElementById('add-hike-form').onsubmit = async (e) => {
-            e.preventDefault();
-            const id = document.getElementById('hike-id-to-edit').value;
-            const data = {
-                name: document.getElementById('hike-name').value,
-                location: document.getElementById('hike-location').value,
-                club: document.getElementById('hike-club').value,
-                date: document.getElementById('hike-date').value,
-                distance: document.getElementById('hike-distance').value,
-                description: document.getElementById('hike-description-editor').innerHTML,
-                updatedAt: new Date().toISOString()
-            };
-            if(id) {
-                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'hikes', id), data);
-            } else {
-                data.participants = [];
-                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'hikes'), data);
-            }
-            resetForm();
-        };
-
-        initAuth();
-    </script>
-</body>
-</html>
+document.querySelectorAll('.club-pill').forEach(p => {
+  p.addEventListener('click', () => {
+    document.querySelectorAll('.club-pill').forEach(x => x.classList.remove('active'));
+    p.classList.add('active');
+  });
+});
+document.querySelectorAll('.chip').forEach(c => {
+  c.addEventListener('click', () => c.classList.toggle('active'));
+});
+document.querySelectorAll('.view-btn').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('.view-btn').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+  });
+});
+</script>
